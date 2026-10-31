@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "⏳ Memeriksa sintaks (lint-staged)..."
+bunx lint-staged
+
+echo "⏳ Memeriksa tipe data TypeScript di seluruh proyek..."
+bunx tsc --noEmit

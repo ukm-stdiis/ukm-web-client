@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+REGEX="^(feat|fix|ui|refactor|chore): .+"
+
+if ! echo "$COMMIT_MSG" | grep -qE "$REGEX"; then
+  echo "❌ BATAL COMMIT: Format pesan tidak standar!"
+  echo "Wajib diawali: feat:, fix:, ui:, refactor:, atau chore:"
+  echo "Pesan kamu: \"$COMMIT_MSG\""
+  exit 1
+fi

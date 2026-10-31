@@ -1,0 +1,54 @@
+name: ORMAWA Quality Gate
+
+on:
+  push:
+    branches: [ "main", "staging" ]
+  pull_request:
+    branches: [ "main", "staging" ]
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Menggunakan setup-bun resmi
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      # Validasi ESLint (tanpa --fix agar memunculkan error, bukan memperbaikinya diam-diam)
+      - name: Run ESLint
+        run: bunx eslint .
+
+      # Validasi TypeScript
+      - name: Run TypeScript Checker
+        run: bunx tsc --noEmit
+
+  commit-validation:
+    runs-on: ubuntu-latest
+    # Hanya jalankan pengecekan pesan commit pada Pull Request
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR Title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          REGEX="^(feat|fix|ui|refactor|chore): .+"
+          if ! echo "$PR_TITLE" | grep -qE "$REGEX"; then
+            echo "❌ ERROR: Judul Pull Request melanggar aturan format!"
+            echo "Judul PR harus diawali dengan: feat:, fix:, ui:, refactor:, atau chore:"
+            echo "Judul saat ini: $PR_TITLE"
+            exit 1
+          fi
+          echo "✅ Format judul PR valid."
