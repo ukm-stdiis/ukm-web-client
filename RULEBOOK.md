@@ -45,13 +45,82 @@ Kami tidak menerima pesan _commit_ yang tidak jelas seperti `"update"`, `"fix bu
 
 ## 4. Alur Kerja Git (Git Workflow) & Pull Request
 
-Cabang `main` dan `development` dikunci oleh sistem (_Protected Branches_). Tidak ada _push_ langsung yang diizinkan, sekecil apa pun perubahannya.
+Cabang `main` dan `staging` dikunci oleh sistem (_Protected Branches_). Tidak ada _push_ langsung yang diizinkan, sekecil apa pun perubahannya.
 
-1. **Buat Cabang (Branch):** Buat cabang baru dari `development` dengan format `<nama>-<tugas>`.
-   _(Contoh: `naufal-ui-hero` atau `rafli-api-auth`)_
-2. **Commit:** Lakukan _commit_ bertahap sesuai format di atas.
-3. **Push & PR:** Lakukan `git push` dan buka **Pull Request (PR)** di GitHub.
-4. **Review:** Kode tidak bisa digabungkan (_merge_) sebelum mendapat _Approval_ dari Project Manager/Lead Code dan lolos pengecekan CI/CD.
+### 4.1. Arsitektur Cabang Utama
+
+- **`staging` (Lingkungan Pengembangan/Integrasi)**
+  - Ini adalah **Default Branch** repositori.
+  - Semua fitur, perbaikan, dan pembaruan dari setiap pengembang **wajib** bermuara di cabang ini.
+  - Cabang ini tidak akan dipublikasikan ke pengguna akhir, melainkan diuji secara internal.
+- **`main` (Lingkungan Produksi)**
+  - Cabang ini **terkunci rapat**. Hanya berisi kode stabil yang siap ditarik oleh Docker server kampus.
+  - **Dilarang keras** menargetkan Pull Request (PR) harian ke cabang ini.
+
+### 4.2. Alur Kerja Harian Developer (SOP Pengembang)
+
+Setiap anggota tim wajib mengikuti urutan perintah ini setiap kali memulai dan menyelesaikan tugas baru.
+
+#### Langkah 1: Sinkronisasi Fondasi Lokal
+
+Selalu mulai pekerjaan dari cabang `staging` yang paling mutakhir. Jangan menimpa riwayat dengan _merge commit_.
+
+```bash
+git checkout staging
+git pull --rebase origin staging
+```
+
+#### Langkah 2: Buat Cabang Kerja (Branching)
+
+Tidak ada yang boleh menulis kode langsung di `staging`. Buat cabang baru khusus untuk tugas spesifik Anda dengan format `<nama>-<tugas>`.
+
+```bash
+# Contoh: naufal-ui-navbar atau rafli-api-ukm
+git checkout -b <nama-cabang>
+```
+
+#### Langkah 3: Eksekusi Kode & Commit
+
+Lakukan pekerjaan Anda. Saat menyimpan perubahan, Husky akan memvalidasi linter dan sintaks TypeScript secara otomatis. Gunakan format standar mutlak yang telah dijelaskan pada poin 3.
+
+```bash
+git add .
+git commit -m "feat: tambahkan endpoint tabel kas ukm"
+```
+
+#### Langkah 4: Dorong (Push) Cabang ke Server
+
+Unggah cabang kerja Anda ke repositori GitHub.
+
+```bash
+git push -u origin <nama-cabang>
+```
+
+#### Langkah 5: Buka Pull Request (PR)
+
+1. Buka repositori di GitHub.
+2. Klik tombol **Compare & pull request** pada cabang yang baru Anda dorong.
+3. ⚠️ **KRUSIAL:** Pastikan **Base branch (target)** adalah `staging`, bukan `main`.
+4. Isi deskripsi PR dengan jelas.
+5. Tunggu _Code Review_ dari Project Manager dan pastikan GitHub Actions (CI/CD) menunjukkan status _Passed_ (Hijau).
+
+### 4.3. Alur Rilis Produksi (Khusus Project Manager)
+
+Proses ini hanya dieksekusi oleh Project Manager saat aplikasi di `staging` sudah teruji, bebas _bug_, dan siap diluncurkan.
+
+1. Buka tab Pull Requests di GitHub.
+2. Buat _New pull request_.
+3. Atur target: **Base branch = `main`** dan **Compare branch = `staging`**.
+4. Beri judul "Release PR: Pembaruan Modul UKM [Tanggal]".
+5. _Merge_ PR tersebut. Server kampus akan memproses pembaruan ini ke lingkungan produksi.
+
+### 4.4. Penegakan Aturan (Zero Tolerance)
+
+Sistem akan langsung menolak dan menutup (_close_) Pull Request jika:
+
+1. Menargetkan `main` sebagai dasar cabang (_base branch_).
+2. Format pesan _commit_ melanggar konvensi (tidak diawali `feat:`, `fix:`, dll).
+3. Gagal melewati pengecekan tipe data TypeScript atau Linter di tahap CI/CD server.
 
 ---
 
