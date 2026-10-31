@@ -1,0 +1,5 @@
+echo "⏳ Memeriksa sintaks (lint-staged)..."
+bunx lint-staged
+
+echo "⏳ Memeriksa tipe data TypeScript di seluruh proyek..."
+bunx tsc --noEmit
